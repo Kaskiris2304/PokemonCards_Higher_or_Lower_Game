@@ -13,6 +13,8 @@ const App = () => {
     const [card2Price, setCard2Price] = useState(0);
     const [guessCount, setGuessCount] = useState(0); // Initialize guess count state
     const [revealCard2Price, setRevealCard2Price] = useState(false); // State to reveal card 2 price
+    const [bgColor, setBgColor] = useState('#f0f0f0'); // Default background
+    const [gameOver, setGameOver] = useState(false); // Track if the game is over
 
     const fetchCard = () => {
         const randomIndex = Math.floor(Math.random() * cardsDataset.length);
@@ -21,7 +23,7 @@ const App = () => {
 
     const initGame = async () => {
         let fetchedCard1, fetchedCard2; // Declare variables outside of the if block
-        if (guessCount == 0) {
+        if (gameOver) {
           fetchedCard1 = fetchCard();
           fetchedCard2 = fetchCard();
         }
@@ -44,16 +46,31 @@ const App = () => {
             setResult('Correct!');
             setGuessCount(guessCount + 1); // Increment guess count
             setRevealCard2Price(true);
+            setBgColor('#6ecf6e');
+
+            // Delay for transitioning to the next round
+            setTimeout(() => {
+                setRevealCard2Price(false);
+                setBgColor('#f0f0f0'); // Reset the background color
+                setResult('');
+                initGame(); // Call initGame to start a new round
+            }, 2000); // 1 second delay (adjust if needed)
+
         } else {
             setResult('Wrong! Try Again.');
             setGuessCount(0)
             setRevealCard2Price(true);
+            setBgColor('#ff8b8b');
+            setGameOver(true); // Mark the game as over when the user loses
+
         }
     };
 
     const restartGame = () => {
         setResult('');
         setRevealCard2Price(false);
+        setBgColor('#f0f0f0');
+        setGameOver(false); // Reset game over state
         initGame();
 
     };
@@ -63,7 +80,7 @@ const App = () => {
     }, []);
 
     return (
-         <div className="container">
+         <div className="container" style={{ backgroundColor: bgColor, transition: 'background-color 0.5s ease-in-out' }}>
              <h1>Pokémon Higher or Lower: Card Prices</h1>
 
              <div className="card-container">
@@ -86,16 +103,23 @@ const App = () => {
                      <p>
                        Price: {revealCard2Price ? `$${card2.cardmarket?.prices?.trendPrice || 'Price not available'}` : '???'}
                      </p>
+
+                     <div className="controls">
+                       {!gameOver ? (
+                            <>
+                                <button onClick={() => guess('higher')}>Higher</button>
+                                <button onClick={() => guess('lower')}>Lower</button>
+                            </>
+                        ) : (
+                            <button onClick={restartGame}>Restart Game</button>
+                        )}
+                     </div>
                  </div>
+
              </div>
-             <div className="counter">Guess Count: {guessCount}</div> {/* Display the guess count */}
-             <div className="controls">
-                 <button onClick={() => guess('higher')}>Higher</button>
-                 <button onClick={() => guess('lower')}>Lower</button>
-                 <button onClick={restartGame}>
-                    {guessCount === 0 ? 'Restart Game' : 'Next'}
-                 </button>
-             </div>
+             <div className="counter">Score: {guessCount}</div> {/* Display the guess count */}
+
+
 
              <p id="result">{result}</p>
          </div>
